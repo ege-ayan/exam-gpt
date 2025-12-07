@@ -153,7 +153,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900">
+    <div className="flex flex-col bg-gray-900" style={{ height: "100dvh" }}>
       <div className="bg-gray-800 shadow-sm border-b border-gray-700 px-4 py-3 sm:px-6 sm:py-4">
         <div className="flex justify-between items-center max-w-7xl mx-auto">
           <div>
