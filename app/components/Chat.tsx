@@ -277,19 +277,30 @@ export default function Chat() {
 
       <div className="bg-gray-800 border-t border-gray-700 px-4 py-3 sm:px-6 sm:py-4">
         <div className="max-w-7xl mx-auto">
-          <form onSubmit={sendMessage} className="flex items-end space-x-3">
+          <form
+            onSubmit={sendMessage}
+            className="flex items-end space-x-2 xs:space-x-3"
+          >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder="Ders, ödev veya herhangi bir konuda soru sorun..."
-              className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="flex-1 px-3 py-2 xs:px-4 xs:py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 text-sm xs:text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              style={{
+                fontSize: "clamp(0.875rem, 2.5vw, 1rem)", // Responsive font size
+                padding:
+                  "clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem)", // Responsive padding
+              }}
               disabled={isLoading}
             />
             <button
               type="submit"
               disabled={!input.trim() || isLoading}
-              className="px-6 py-3 bg-linear-to-r from-blue-600 via-blue-700 to-indigo-700 text-white rounded-xl hover:from-blue-700 hover:via-blue-800 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-2"
+              className="px-4 py-2 xs:px-6 xs:py-3 bg-linear-to-r from-blue-600 via-blue-700 to-indigo-700 text-white rounded-xl hover:from-blue-700 hover:via-blue-800 hover:to-indigo-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl flex items-center space-x-2 text-sm xs:text-base"
+              style={{
+                padding: "clamp(0.5rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem)", // Responsive button padding
+              }}
             >
               {isLoading ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
