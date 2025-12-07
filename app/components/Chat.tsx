@@ -17,12 +17,19 @@ interface Message {
 }
 
 export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const { sessionId, generateNewSession, clearSession } = useChatStore();
+  const {
+    sessionId,
+    messages,
+    generateNewSession,
+    clearSession,
+    addMessage,
+    clearMessages,
+    updateMessage,
+  } = useChatStore();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -62,7 +69,7 @@ export default function Chat() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    addMessage(userMessage);
     setInput("");
     setIsLoading(true);
 
@@ -74,7 +81,7 @@ export default function Chat() {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, assistantMessage]);
+    addMessage(assistantMessage);
 
     try {
       const response = await fetch("/api/chat", {
@@ -85,6 +92,7 @@ export default function Chat() {
         body: JSON.stringify({
           message: userMessage.content,
           sessionId: sessionId,
+          conversationHistory: messages.slice(-20),
         }),
       });
 
@@ -116,13 +124,7 @@ export default function Chat() {
 
               if (data.text) {
                 accumulatedText += data.text;
-                setMessages((prev) =>
-                  prev.map((msg) =>
-                    msg.id === assistantMessageId
-                      ? { ...msg, content: accumulatedText }
-                      : msg
-                  )
-                );
+                updateMessage(assistantMessageId, accumulatedText);
               } else if (data.done) {
                 break;
               } else if (data.error) {
@@ -144,9 +146,7 @@ export default function Chat() {
         }`,
         timestamp: new Date(),
       };
-      setMessages((prev) =>
-        prev.map((msg) => (msg.id === assistantMessageId ? errorMessage : msg))
-      );
+      updateMessage(assistantMessageId, errorMessage.content);
     } finally {
       setIsLoading(false);
     }

@@ -1,28 +1,66 @@
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+}
 
 interface ChatStore {
   sessionId: string | null;
+  messages: Message[];
   generateNewSession: () => void;
   clearSession: () => void;
+  addMessage: (message: Message) => void;
+  clearMessages: () => void;
+  updateMessage: (id: string, content: string) => void;
 }
 
 export const useChatStore = create<ChatStore>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       sessionId: null,
+      messages: [],
 
       generateNewSession: () => {
-        const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const newSessionId = `session_${Date.now()}_${Math.random()
+          .toString(36)
+          .substr(2, 9)}`;
         set({ sessionId: newSessionId });
       },
 
       clearSession: () => {
         set({ sessionId: null });
       },
+
+      addMessage: (message: Message) => {
+        set((state) => ({
+          messages: [...state.messages, message],
+        }));
+      },
+
+      clearMessages: () => {
+        set({ messages: [] });
+      },
+
+      updateMessage: (id: string, content: string) => {
+        set((state) => ({
+          messages: state.messages.map((msg) =>
+            msg.id === id ? { ...msg, content } : msg
+          ),
+        }));
+      },
     }),
     {
-      name: 'exam-gpt-chat-storage',
+      name: "exam-gpt-chat-storage",
+      // Only persist sessionId and recent messages, not all messages to avoid storage bloat
+      partialize: (state) => ({
+        sessionId: state.sessionId,
+        // Keep only last 20 messages for persistence
+        messages: state.messages.slice(-20),
+      }),
     }
   )
 );

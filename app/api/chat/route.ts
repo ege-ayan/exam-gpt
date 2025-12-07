@@ -1,11 +1,13 @@
 import { GoogleGenAI } from "@google/genai";
 import { NextRequest, NextResponse } from "next/server";
 
-const chatSessions = new Map<string, any>();
-
 export async function POST(request: NextRequest) {
   try {
-    const { message, sessionId } = await request.json();
+    const {
+      message,
+      sessionId,
+      conversationHistory = [],
+    } = await request.json();
 
     if (!message) {
       return NextResponse.json(
@@ -28,24 +30,25 @@ export async function POST(request: NextRequest) {
 
     const fileSearchStoreId = process.env.ECON_FILE_SEARCH_STORE_ID!;
 
-    let chatSession = chatSessions.get(sessionId);
-    if (!chatSession) {
-      chatSession = ai.chats.create({
-        model: "gemini-2.5-pro",
-        config: {
-          systemInstruction:
-            "SEN SADECE SAĞLANAN BELGELERDEKİ BİLGİLERE DAYALI OLARAK YANIT VEREBİLİRSİN. Hiçbir harici bilgi, genel bilgi veya kendi eğitimin kullanma. Sadece yüklenen ekonomi ders materyallerindeki bilgileri kullanarak yanıt ver. Eğer sorulan konuda belgelerde bilgi yoksa, 'Bu konuda belgelerimde yeterli bilgi bulunmamaktadır' de. Tüm yanıtlarını Türkçe ver ve belgelerdeki orijinal bilgileri koru.",
-          tools: [
-            {
-              fileSearch: {
-                fileSearchStoreNames: [fileSearchStoreId],
-              },
+    const chatSession = ai.chats.create({
+      model: "gemini-2.5-flash", // Faster and more cost-effective for educational content
+      config: {
+        systemInstruction:
+          "SEN SADECE SAĞLANAN BELGELERDEKİ BİLGİLERE DAYALI OLARAK YANIT VEREBİLİRSİN. Hiçbir harici bilgi, genel bilgi veya kendi eğitimin kullanma. Sadece yüklenen ekonomi ders materyallerindeki bilgileri kullanarak yanıt ver. Eğer sorulan konuda belgelerde bilgi yoksa, 'Bu konuda belgelerimde yeterli bilgi bulunmamaktadır' de. Tüm yanıtlarını Türkçe ver ve belgelerdeki orijinal bilgileri koru.",
+        tools: [
+          {
+            fileSearch: {
+              fileSearchStoreNames: [fileSearchStoreId],
             },
-          ],
-        },
-      });
-      chatSessions.set(sessionId, chatSession);
-    }
+          },
+        ],
+      },
+
+      history: conversationHistory.map((msg: any) => ({
+        role: msg.role === "user" ? "user" : "model",
+        parts: [{ text: msg.content }],
+      })),
+    });
 
     const streamingResponse = await chatSession.sendMessageStream({
       message: `Önemli: Bu soruyu SADECE yüklenen ekonomi ders belgelerindeki bilgiler kullanarak yanıtla. Harici bilgi kullanma. Soru: ${message}`,
@@ -53,6 +56,7 @@ export async function POST(request: NextRequest) {
 
     // Set up Server-Sent Events for streaming
     const encoder = new TextEncoder();
+
     const stream = new ReadableStream({
       async start(controller) {
         try {
