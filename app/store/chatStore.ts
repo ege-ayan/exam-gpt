@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 interface Message {
   id: string;
@@ -18,49 +17,36 @@ interface ChatStore {
   updateMessage: (id: string, content: string) => void;
 }
 
-export const useChatStore = create<ChatStore>()(
-  persist(
-    (set, get) => ({
-      sessionId: null,
-      messages: [],
+export const useChatStore = create<ChatStore>()((set, get) => ({
+  sessionId: null,
+  messages: [],
 
-      generateNewSession: () => {
-        const newSessionId = `session_${Date.now()}_${Math.random()
-          .toString(36)
-          .substr(2, 9)}`;
-        set({ sessionId: newSessionId });
-      },
+  generateNewSession: () => {
+    const newSessionId = `session_${Date.now()}_${Math.random()
+      .toString(36)
+      .substr(2, 9)}`;
+    set({ sessionId: newSessionId });
+  },
 
-      clearSession: () => {
-        set({ sessionId: null });
-      },
+  clearSession: () => {
+    set({ sessionId: null, messages: [] });
+  },
 
-      addMessage: (message: Message) => {
-        set((state) => ({
-          messages: [...state.messages, message],
-        }));
-      },
+  addMessage: (message: Message) => {
+    set((state) => ({
+      messages: [...state.messages, message],
+    }));
+  },
 
-      clearMessages: () => {
-        set({ messages: [] });
-      },
+  clearMessages: () => {
+    set({ messages: [] });
+  },
 
-      updateMessage: (id: string, content: string) => {
-        set((state) => ({
-          messages: state.messages.map((msg) =>
-            msg.id === id ? { ...msg, content } : msg
-          ),
-        }));
-      },
-    }),
-    {
-      name: "exam-gpt-chat-storage",
-      // Only persist sessionId and recent messages, not all messages to avoid storage bloat
-      partialize: (state) => ({
-        sessionId: state.sessionId,
-        // Keep only last 20 messages for persistence
-        messages: state.messages.slice(-20),
-      }),
-    }
-  )
-);
+  updateMessage: (id: string, content: string) => {
+    set((state) => ({
+      messages: state.messages.map((msg) =>
+        msg.id === id ? { ...msg, content } : msg
+      ),
+    }));
+  },
+}));
